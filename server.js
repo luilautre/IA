@@ -1,18 +1,13 @@
-// server.js
 import express from "express";
 import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 const app = express();
 app.use(express.json());
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY, // Ta clé OpenAI ici
+// NE PAS mélanger avec l'ancienne Configuration/OpenAIApi
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
-const openai = new OpenAIApi(configuration);
 
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
@@ -22,8 +17,8 @@ app.post("/chat", async (req, res) => {
       messages: [{ role: "user", content: message }],
     });
     res.json({ reply: response.choices[0].message.content });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Erreur serveur");
   }
 });

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>ChatGPT sur mon site</title>
+</head>
+<body>
+<h1>ChatGPT Web</h1>
+<textarea id="message" placeholder="Écris ton message"></textarea><br>
+<button id="send">Envoyer</button>
+<div id="reply"></div>
+
+<script>
+document.getElementById("send").addEventListener("click", async () => {
+  const msg = document.getElementById("message").value;
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg })
+  });
+  const data = await res.json();
+  document.getElementById("reply").innerText = data.reply;
+});
+</script>
+</body>
+</html>

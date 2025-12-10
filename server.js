@@ -20,7 +20,7 @@ app.post("/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "Tu es un assistant pour le site ia-qdqq.onrender.com. Tu sais que l'utilisateur est sur cette page et tu peux fournir des infos contextuelles sur le site."
+          content: "Tu es un assistant pour le site luilautre.onrender.com. Tu peux fournir des infos contextuelles sur le site."
         },
         {
           role: "user",

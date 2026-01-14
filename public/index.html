@@ -27,8 +27,8 @@
   .md-rendered:hover { transform: translateY(-1px); }
 
   /* Bulles IA / User */
-  .reply-ia { background: #eef2ff; align-self: flex-start; }
-  .reply-user { background: #dfffe0; align-self: flex-end; }
+  .reply-ia { background: #dce6ff; align-self: flex-start; }
+  .reply-user { background: #c9f7dc; align-self: flex-end; }
 
   h1 { font-size: 2em; color: #1a1a1a; }
   h2 { font-size: 1.6em; color: #222; margin-top: 1em; }
@@ -85,6 +85,16 @@
     display: flex;
     flex-direction: column;
     margin-top: 20px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+  #reply-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  #reply-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
   }
 </style>
 </head>
@@ -97,59 +107,49 @@
 </div>
 
 <!-- Conteneur des réponses -->
-<div id="reply-container">
-  <!-- Messages -->
-</div>
+<div id="reply-container"></div>
 
 <script>
-// Message initial
-const initialMessage = "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
+const md = window.markdownit();
+const replyContainer = document.getElementById("reply-container");
 
-// Ajouter à la mémoire courte
+// --- Mémoire ---
+let sessionHistory = []; // courte (session)
+let longTermMemory = JSON.parse(localStorage.getItem("chatMemory") || "[]"); // longue
+let customMemory = { userName: "Luilautre", favoriteTopic: "IA et Markdown" };
+
+// --- Message de bienvenue automatique ---
+const initialMessage = "Bonjour ! Je suis votre assistant. Comment puis-je vous aider aujourd'hui ?";
+
+// Ajouter à la mémoire courte et longue
 sessionHistory.push({ role: "assistant", content: initialMessage });
+longTermMemory.push({ role: "assistant", content: initialMessage });
+localStorage.setItem("chatMemory", JSON.stringify(longTermMemory));
 
-// Optionnel : afficher ce message dès le départ
+// Afficher sur la page
 const iaDiv = document.createElement("div");
 iaDiv.className = "md-rendered reply-ia";
 iaDiv.innerHTML = md.render(initialMessage);
 replyContainer.appendChild(iaDiv);
 
-const md = window.markdownit();
-
-// Mémoire courte (session)
-let sessionHistory = [];
-
-// Mémoire longue (localStorage)
-let longTermMemory = JSON.parse(localStorage.getItem("chatMemory") || "[]");
-
-// Mémoire personnalisable
-let customMemory = {
-  userName: "Luilautre",
-  favoriteTopic: "IA et Markdown"
-};
-
-const replyContainer = document.getElementById("reply-container");
-
+// --- Gestion de l'envoi ---
 document.getElementById("send").addEventListener("click", async () => {
   const msg = document.getElementById("message").value.trim();
   if (!msg) return;
 
-  // Ajouter message utilisateur à l'UI et mémoire
+  // Afficher message utilisateur
   const userDiv = document.createElement("div");
   userDiv.className = "md-rendered reply-user";
   userDiv.textContent = msg;
   replyContainer.appendChild(userDiv);
+
+  // Ajouter à la mémoire courte
   sessionHistory.push({ role: "user", content: msg });
 
-  // Préparer payload pour le serveur
-  const payload = {
-    message: msg,
-    sessionHistory,
-    longTermMemory,
-    customMemory
-  };
+  // Préparer payload pour serveur
+  const payload = { message: msg, sessionHistory, longTermMemory, customMemory };
 
-  // Envoi au serveur
+  // Envoyer au serveur
   const res = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -157,13 +157,13 @@ document.getElementById("send").addEventListener("click", async () => {
   });
   const data = await res.json();
 
-  // Ajouter réponse IA
+  // Afficher réponse IA
   const iaDiv = document.createElement("div");
   iaDiv.className = "md-rendered reply-ia";
   iaDiv.innerHTML = md.render(data.reply);
   replyContainer.appendChild(iaDiv);
 
-  // Ajouter réponse à la mémoire
+  // Ajouter à la mémoire courte et longue
   sessionHistory.push({ role: "assistant", content: data.reply });
   longTermMemory.push({ role: "assistant", content: data.reply });
   localStorage.setItem("chatMemory", JSON.stringify(longTermMemory));

@@ -98,7 +98,7 @@
 
 <!-- Conteneur des réponses -->
 <div id="reply-container">
-  <div class="md-rendered reply-ia"><p>Bonjour ! Comment puis-je vous aider aujourd'hui ?</p></div>
+  <!-- Messages -->
 </div>
 
 <script>
@@ -129,6 +129,7 @@ document.getElementById("send").addEventListener("click", async () => {
   replyContainer.appendChild(userDiv);
   sessionHistory.push({ role: "user", content: msg });
 
+  sessionHistory.push({ role: "assistant", content: "Bonjour ! Comment puis-je vous aider aujourd'hui ?" });
   // Préparer payload pour le serveur
   const payload = {
     message: msg,

@@ -5,46 +5,38 @@
 <title>IA de luilautre</title>
 <script src="https://luilautre.github.io/libs/markdown-it.min.js"></script>
 <style>
-  /* Base et typographie */
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 900px;
     margin: 0 auto;
-    padding-bottom: 150px; /* espace pour le chat flottant */
+    padding-bottom: 160px; /* espace pour chat flottant */
     color: #333;
     line-height: 1.6;
     background: #f0f2f5;
   }
 
-  /* Markdown rendu */
+  /* Blocs Markdown / bulles */
   .md-rendered {
     background: #fff;
-    padding: 25px;
-    margin: 20px 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin: 10px 0;
     border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: transform 0.2s ease;
   }
-  .md-rendered:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  }
+  .md-rendered:hover { transform: translateY(-1px); }
 
-  h1 { color: #1a1a1a; font-size: 2em; }
-  h2 { color: #222; font-size: 1.6em; margin-top: 1.2em; }
-  h3 { color: #333; font-size: 1.3em; margin-top: 1em; }
-  pre {
-    background: #f4f4f8;
-    padding: 15px;
-    border-radius: 8px;
-    overflow-x: auto;
-  }
-  ul {
-    padding-left: 25px;
-    margin: 10px 0;
-  }
+  /* Bulles IA / User */
+  .reply-ia { background: #eef2ff; align-self: flex-start; }
+  .reply-user { background: #dfffe0; align-self: flex-end; }
 
-  /* Chat flottant amélioré */
+  h1 { font-size: 2em; color: #1a1a1a; }
+  h2 { font-size: 1.6em; color: #222; margin-top: 1em; }
+  h3 { font-size: 1.3em; color: #333; margin-top: 1em; }
+  pre { background: #f4f4f8; padding: 12px; border-radius: 8px; overflow-x: auto; }
+  ul { padding-left: 25px; margin: 10px 0; }
+
+  /* Chat flottant */
   .chat-container {
     position: fixed;
     bottom: 20px;
@@ -59,7 +51,6 @@
     align-items: center;
     z-index: 1000;
   }
-
   .chat-container textarea {
     width: 450px;
     height: 45px;
@@ -68,14 +59,12 @@
     border: 1px solid #ccc;
     resize: none;
     font-size: 1em;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .chat-container textarea:focus {
     outline: none;
     border-color: #5b8def;
     box-shadow: 0 0 5px #5b8def33;
   }
-
   .chat-container button {
     padding: 10px 20px;
     border-radius: 12px;
@@ -84,70 +73,91 @@
     color: white;
     cursor: pointer;
     font-size: 1em;
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition: background 0.2s, transform 0.1s;
   }
   .chat-container button:hover {
     background: #3f6fd1;
     transform: scale(1.05);
   }
 
-  /* Réponses IA avec bulles */
+  /* Container des réponses */
   #reply-container {
     display: flex;
     flex-direction: column;
+    margin-top: 20px;
   }
-  .reply-ia {
-    background: #eef2ff;
-    padding: 18px;
-    border-radius: 15px;
-    margin: 10px 0;
-    max-width: 90%;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease;
-  }
-  .reply-ia:hover {
-    transform: translateY(-1px);
-  }
-
 </style>
 </head>
 <body>
 
-<!-- Conteneur de chat flottant -->
+<!-- Chat flottant -->
 <div class="chat-container">
   <textarea id="message" placeholder="Écris ton message"></textarea>
   <button id="send">Envoyer</button>
 </div>
 
-<!-- Réponses IA -->
-<div id="reply-container">
-  <div class="md-rendered reply-ia"><p>Bonjour ! Comment puis-je vous aider aujourd'hui ?</p>
-</div>
-</div>
+<!-- Conteneur des réponses -->
+<div id="reply-container"></div>
 
 <script>
-  const md = window.markdownit();
-  const replyContainer = document.getElementById("reply-container");
+const md = window.markdownit();
 
-  document.getElementById("send").addEventListener("click", async () => {
-    const msg = document.getElementById("message").value;
-    if (!msg.trim()) return;
+// Mémoire courte (session)
+let sessionHistory = [];
 
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg })
-    });
-    const data = await res.json();
+// Mémoire longue (localStorage)
+let longTermMemory = JSON.parse(localStorage.getItem("chatMemory") || "[]");
 
-    const div = document.createElement("div");
-    div.className = "md-rendered reply-ia";
-    div.innerHTML = md.render(data.reply);
-    replyContainer.appendChild(div);
+// Mémoire personnalisable
+let customMemory = {
+  userName: "Luilautre",
+  favoriteTopic: "IA et Markdown"
+};
 
-    document.getElementById("message").value = "";
-    div.scrollIntoView({ behavior: "smooth" });
+const replyContainer = document.getElementById("reply-container");
+
+document.getElementById("send").addEventListener("click", async () => {
+  const msg = document.getElementById("message").value.trim();
+  if (!msg) return;
+
+  // Ajouter message utilisateur à l'UI et mémoire
+  const userDiv = document.createElement("div");
+  userDiv.className = "md-rendered reply-user";
+  userDiv.textContent = msg;
+  replyContainer.appendChild(userDiv);
+  sessionHistory.push({ role: "user", content: msg });
+
+  // Préparer payload pour le serveur
+  const payload = {
+    message: msg,
+    sessionHistory,
+    longTermMemory,
+    customMemory
+  };
+
+  // Envoi au serveur
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
   });
+  const data = await res.json();
+
+  // Ajouter réponse IA
+  const iaDiv = document.createElement("div");
+  iaDiv.className = "md-rendered reply-ia";
+  iaDiv.innerHTML = md.render(data.reply);
+  replyContainer.appendChild(iaDiv);
+
+  // Ajouter réponse à la mémoire
+  sessionHistory.push({ role: "assistant", content: data.reply });
+  longTermMemory.push({ role: "assistant", content: data.reply });
+  localStorage.setItem("chatMemory", JSON.stringify(longTermMemory));
+
+  // Vider la zone de texte et scroll
+  document.getElementById("message").value = "";
+  iaDiv.scrollIntoView({ behavior: "smooth" });
+});
 </script>
 
 </body>

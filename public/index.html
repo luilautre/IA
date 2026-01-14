@@ -69,20 +69,6 @@
 </head>
 <body id="body">
 
-<!-- Blocs Markdown statiques -->
-<div class="md">
-# Un titre
-## Un titre de second niveau
-Un texte
-</div>
-
-<div class="md">
-## Deuxième Bloc
-- Item 1
-- Item 2
-- Item 3
-</div>
-
 <!-- Conteneur de chat flottant -->
 <div class="chat-container">
   <textarea id="message" placeholder="Écris ton message"></textarea>
@@ -94,21 +80,8 @@ Un texte
 
 <script>
   const md = window.markdownit();
-  const mdElements = document.getElementsByClassName("md");
-  const body = document.getElementById("body");
   const replyContainer = document.getElementById("reply-container");
 
-  // Rendu des blocs statiques
-  function renderAll() {
-    for (let i = 0; i < mdElements.length; i++) {
-      const content = mdElements[i].textContent.trim();
-      const div = document.createElement("div");
-      div.className = "md-rendered";
-      div.innerHTML = md.render(content);
-      body.appendChild(div);
-    }
-  }
-  renderAll();
 
   // Envoi du chat
   document.getElementById("send").addEventListener("click", async () => {
@@ -122,7 +95,6 @@ Un texte
     });
     const data = await res.json();
 
-    // Ajouter la réponse rendue en Markdown
     const div = document.createElement("div");
     div.className = "md-rendered";
     div.innerHTML = md.render(data.reply);

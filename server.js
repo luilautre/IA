@@ -11,29 +11,22 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-app.post("/chat", async (req, res) => {
-  const { message } = req.body;
+app.post("/chat", (req, res) => {
+  const { message, sessionHistory } = req.body;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "Tu es un assistant pour le site luilautre.onrender.com. Tu peux fournir des infos contextuelles sur le site."
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ]
-    });
+  let reply;
 
-    res.json({ reply: response.choices[0].message.content });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erreur serveur");
+  // Vérifie si l'assistant a déjà parlé
+  const assistantHasSpoken = sessionHistory.some(m => m.role === "assistant");
+
+  if (!assistantHasSpoken) {
+    reply = "Bonjour ! Je suis votre assistant. Comment puis-je vous aider aujourd'hui ?";
+  } else {
+    // Logique normale pour générer la réponse à l'utilisateur
+    reply = generateReply(message, sessionHistory); 
   }
+
+  res.json({ reply });
 });
 
 app.listen(3000, () => console.log("Serveur démarré sur http://localhost:3000"));

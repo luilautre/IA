@@ -3,24 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <title>IA de luilautre</title>
+<script src="markdown-it.min.js"></script>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 120px; /* espace pour la zone flottante */
+    color: #333;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .md-rendered {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    border-radius: 5px;
+  }
+
+  h1, h2, h3 {
+    color: #222;
+  }
+
+  pre {
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+    background: #f4f4f4;
+  }
+
+  ul {
+    padding-left: 20px;
+  }
+
+  /* Zone flottante en bas */
+  .chat-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .chat-container textarea {
+    width: 400px;
+    height: 40px;
+    padding: 5px;
+    resize: none;
+  }
+
+  .chat-container button {
+    padding: 8px 15px;
+    cursor: pointer;
+  }
+</style>
 </head>
-<body>
-<h1>IA de luilautre</h1>
-<textarea id="message" placeholder="Écris ton message"></textarea><br>
-<button id="send">Envoyer</button>
-<div id="reply"></div>
+<body id="body">
+
+<!-- Blocs Markdown statiques -->
+<div class="md">
+# Un titre
+## Un titre de second niveau
+Un texte
+</div>
+
+<div class="md">
+## Deuxième Bloc
+- Item 1
+- Item 2
+- Item 3
+</div>
+
+<!-- Conteneur de chat flottant -->
+<div class="chat-container">
+  <textarea id="message" placeholder="Écris ton message"></textarea>
+  <button id="send">Envoyer</button>
+</div>
+
+<!-- Réponses IA -->
+<div id="reply-container"></div>
 
 <script>
-document.getElementById("send").addEventListener("click", async () => {
-  const msg = document.getElementById("message").value;
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
+  const md = window.markdownit();
+  const mdElements = document.getElementsByClassName("md");
+  const body = document.getElementById("body");
+  const replyContainer = document.getElementById("reply-container");
+
+  // Rendu des blocs statiques
+  function renderAll() {
+    for (let i = 0; i < mdElements.length; i++) {
+      const content = mdElements[i].textContent.trim();
+      const div = document.createElement("div");
+      div.className = "md-rendered";
+      div.innerHTML = md.render(content);
+      body.appendChild(div);
+    }
+  }
+  renderAll();
+
+  // Envoi du chat
+  document.getElementById("send").addEventListener("click", async () => {
+    const msg = document.getElementById("message").value;
+    if (!msg.trim()) return;
+
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+
+    // Ajouter la réponse rendue en Markdown
+    const div = document.createElement("div");
+    div.className = "md-rendered";
+    div.innerHTML = md.render(data.reply);
+    replyContainer.appendChild(div);
+
+    // Vide la zone de texte
+    document.getElementById("message").value = "";
+    // Scroll vers la dernière réponse
+    div.scrollIntoView({ behavior: "smooth" });
   });
-  const data = await res.json();
-  document.getElementById("reply").innerText = data.reply;
-});
 </script>
+
 </body>
 </html>

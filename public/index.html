@@ -110,6 +110,15 @@
 <div id="reply-container"></div>
 
 <script>
+const textarea = document.getElementById("message");
+
+textarea.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("send").click();
+  }
+});
+
 const md = window.markdownit();
 const replyContainer = document.getElementById("reply-container");
 

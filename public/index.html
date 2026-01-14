@@ -102,6 +102,18 @@
 </div>
 
 <script>
+// Message initial
+const initialMessage = "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
+
+// Ajouter à la mémoire courte
+sessionHistory.push({ role: "assistant", content: initialMessage });
+
+// Optionnel : afficher ce message dès le départ
+const iaDiv = document.createElement("div");
+iaDiv.className = "md-rendered reply-ia";
+iaDiv.innerHTML = md.render(initialMessage);
+replyContainer.appendChild(iaDiv);
+
 const md = window.markdownit();
 
 // Mémoire courte (session)
@@ -129,7 +141,6 @@ document.getElementById("send").addEventListener("click", async () => {
   replyContainer.appendChild(userDiv);
   sessionHistory.push({ role: "user", content: msg });
 
-  sessionHistory.push({ role: "assistant", content: "Bonjour ! Comment puis-je vous aider aujourd'hui ?" });
   // Préparer payload pour le serveur
   const payload = {
     message: msg,

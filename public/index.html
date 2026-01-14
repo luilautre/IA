@@ -103,6 +103,7 @@
 <!-- Chat flottant -->
 <div class="chat-container">
   <textarea id="message" placeholder="Écris ton message"></textarea>
+  <button id="linebreak">↵</button>
   <button id="send">Envoyer</button>
 </div>
 
@@ -110,6 +111,19 @@
 <div id="reply-container"></div>
 
 <script>
+document.getElementById("linebreak").addEventListener("click", () => {
+  const textarea = document.getElementById("message");
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  
+  // Ajouter un saut de ligne à la position du curseur
+  textarea.value = textarea.value.substring(0, start) + "\n" + textarea.value.substring(end);
+  
+  // Replacer le curseur après le saut de ligne
+  textarea.selectionStart = textarea.selectionEnd = start + 1;
+  textarea.focus();
+});
+
 const textarea = document.getElementById("message");
 
 textarea.addEventListener("keydown", (e) => {
